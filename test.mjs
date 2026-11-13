@@ -1,0 +1,10 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {check} from './engine.mjs';import {examples} from './examples.mjs';
+test('finds shortest failure path instead of first declared long path',()=>{const m={initial:'a',unsafe:['bad'],transitions:[{from:'a',to:'b',action:'long'},{from:'b',to:'bad',action:'finish'},{from:'a',to:'bad',action:'short'}]};assert.deepEqual(check(m).trace,[{from:'a',to:'bad',action:'short'}]);});
+test('initial unsafe state is a zero-step violation',()=>{assert.equal(check({initial:'x',unsafe:['x'],transitions:[]}).status,'unsafe');assert.equal(check({initial:'x',unsafe:['x'],transitions:[]}).trace.length,0);});
+test('cycles terminate and repaired graph is fully explored',()=>{assert.equal(check(examples.repaired).status,'safe');assert.equal(check(examples.repaired).explored,4);});
+test('bounds never produce a false proof of safety',()=>{assert.equal(check(examples.unsafe,{maxDepth:0}).status,'inconclusive');assert.equal(check(examples.repaired,{maxStates:2}).status,'inconclusive');});
+test('depth boundary still checks unsafe nodes at that depth',()=>{assert.equal(check(examples.unsafe,{maxDepth:1}).status,'unsafe');});
+test('deadlock differs from an intentional terminal',()=>{assert.deepEqual(check(examples.deadlock).deadlocks,['Awaiting unavailable reviewer']);assert.deepEqual(check(examples.repaired).deadlocks,[]);});
+test('model is not mutated and malformed schemas fail',()=>{const before=JSON.stringify(examples.unsafe);check(examples.unsafe);assert.equal(JSON.stringify(examples.unsafe),before);for(const m of [null,[],{}, {initial:'a',unsafe:[],transitions:[{}]}])assert.throws(()=>check(m));});
+test('unreachable unsafe states are not reported',()=>{assert.equal(check({initial:'a',unsafe:['b'],terminal:['a'],transitions:[]}).status,'safe');});
+test('counterexample is replayable',()=>{const r=check(examples.unsafe);let state=examples.unsafe.initial;for(const step of r.trace){assert.equal(step.from,state);assert.ok(examples.unsafe.transitions.some(t=>JSON.stringify(t)===JSON.stringify(step)));state=step.to;}assert.ok(examples.unsafe.unsafe.includes(state));});
