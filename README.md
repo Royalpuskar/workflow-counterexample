@@ -1,5 +1,13 @@
 # Workflow Counterexample
 
+<!-- portfolio-website:start -->
+## Website
+
+[Open workflow-counterexample website](https://royalpuskar.github.io/workflow-counterexample/)
+
+GitHub Pages deployment was confirmed during portfolio setup.
+<!-- portfolio-website:end -->
+
 Find the shortest path to a forbidden state in an explicit workflow model. An interactive browser workbench combines bounded breadth-first search, dead-end reporting, and step-by-step counterexample replay.
 
 ## Problem
@@ -61,3 +69,10 @@ Roadmap: guarded Boolean-state models, graph visualization, and independently ch
 ## License
 
 MIT. Copyright 2026 Royalpuskar.
+
+
+<!-- portfolio-rights:start -->
+## Copyright
+
+© 2026 Puskar (Royalpuskar). All rights reserved except the permissions expressly granted by this repository’s MIT License. Third-party rights and notices remain with their owners.
+<!-- portfolio-rights:end -->
