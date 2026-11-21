@@ -10,6 +10,29 @@ GitHub Pages deployment was confirmed during portfolio setup.
 
 Find the shortest path to a forbidden state in an explicit workflow model. An interactive browser workbench combines bounded breadth-first search, dead-end reporting, and step-by-step counterexample replay.
 
+## Counterfactual repair workbench
+
+[Open the repair workbench](https://royalpuskar.github.io/workflow-counterexample/repair.html) · [Planner source](repair.mjs) · [Planner tests](repair.test.mjs)
+
+The planner asks a second question: **what is the smallest allowed change that makes every unsafe state unreachable while preserving a path to each required goal?**
+
+Choose editable transitions and a required destination in `repair.html`. Compare every minimum-cardinality removal set, lost reachable states, remaining deadlocks, and witness paths to preserved goals. Restoring each removed edge produces an unsafe witness explaining why that removal is necessary. Export contains the model, options, and complete results; the page displays up to 30 alternatives.
+
+```js
+import { planRepairs } from './repair.mjs';
+const result = planRepairs(model, {
+  editable: [0, 1, 2, 3],
+  goals: ['Published'],
+  maxRemovals: 4
+});
+```
+
+Edge identities are zero-based positions in `model.transitions`. Protected edges cannot be removed. Enumeration proceeds by removal-set size, checking every smaller candidate before reporting a minimum. Reachability is explored exhaustively for each candidate. The planner supports 128 states/edges and at most 12 editable transitions (at most 4096 candidate sets). A removal budget that ends before all subsets are checked produces `budget-exhausted`, not an impossibility claim.
+
+Goals require **existence of a path**, not eventual progress or fairness. Deadlocks are diagnostic and do not invalidate a repair. Only edge removal is supported; this is not automatic source-code repair, an AI model, or proof of production safety. All computation stays in the browser; no login, credentials, API keys, or uploaded data are required. Do not put secrets in models or exported evidence.
+
+Validation: 19 local Node tests passed (9 original checker tests and 10 planner tests), including an independent exhaustive oracle over small graphs, parallel edges, protected choices, budgets, immutability, and extra-field index tampering. JavaScript syntax was checked. Mobile layout and the new Pages deployment have not been independently browser-verified.
+
 ## Problem
 
 A workflow can look reasonable while retaining a shortcut around its review step. This tool asks a precise question: can any sequence of the transitions you declared reach a state you marked unsafe?
@@ -22,14 +45,14 @@ A workflow can look reasonable while retaining a shortcut around its review step
 - Dead-end detection with separate intentional terminal states.
 - Editable examples for approval bypass, repaired approval, and stranded queues.
 - Replay controls and JSON export containing the model, search limits, and results.
-- Nine behavior tests and a GitHub Actions workflow.
+- Nineteen behavior tests and a GitHub Actions workflow.
 
 ## Run
 
 Node.js 22 or newer is recommended. No package dependencies or API keys are needed.
 
 ```sh
-node --test test.mjs
+node --test test.mjs repair.test.mjs
 python3 -m http.server 8000
 ```
 
@@ -54,7 +77,7 @@ States and action labels are nonempty strings up to 120 characters. Transitions 
 
 `engine.mjs` validates and explores the graph without a DOM. `examples.mjs` contains synthetic fixtures. `app.mjs` handles editing, analysis, replay, and export. The engine leaves inputs unchanged and never evaluates code from a model.
 
-Tests cover shortest paths, unsafe initial states, cycles, search bounds, exact depth boundaries, terminal states, invalid schemas, unreachable unsafe states, and replay validity. Run them with `node --test test.mjs`.
+Tests cover shortest paths, unsafe initial states, cycles, search bounds, exact depth boundaries, terminal states, invalid schemas, unreachable unsafe states, and replay validity. Run them with `node --test test.mjs repair.test.mjs`.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md), [SECURITY.md](SECURITY.md), and [CONTRIBUTING.md](CONTRIBUTING.md).
 
