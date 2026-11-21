@@ -31,7 +31,7 @@ Edge identities are zero-based positions in `model.transitions`. Protected edges
 
 Goals require **existence of a path**, not eventual progress or fairness. Deadlocks are diagnostic and do not invalidate a repair. Only edge removal is supported; this is not automatic source-code repair, an AI model, or proof of production safety. All computation stays in the browser; no login, credentials, API keys, or uploaded data are required. Do not put secrets in models or exported evidence.
 
-Validation: 19 local Node tests passed (9 original checker tests and 10 planner tests), including an independent exhaustive oracle over small graphs, parallel edges, protected choices, budgets, immutability, and extra-field index tampering. JavaScript syntax was checked. Mobile layout and the new Pages deployment have not been independently browser-verified.
+Validation: 19 local Node tests passed (9 original checker tests and 10 planner tests), including an independent exhaustive oracle over small graphs, parallel edges, protected choices, budgets, immutability, and extra-field index tampering. JavaScript syntax was checked. The deployed repair page was verified in a desktop browser: the sample finds a two-edge repair preserving Published, a budget of one reports budget-exhausted, changing settings disables stale export, and expanded necessity evidence shows unsafe paths when each removed edge is restored. Mobile/4K layouts and downloaded export contents remain unverified.
 
 ## Problem
 
