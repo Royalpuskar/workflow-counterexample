@@ -33,6 +33,29 @@ Goals require **existence of a path**, not eventual progress or fairness. Deadlo
 
 Validation: 19 local Node tests passed (9 original checker tests and 10 planner tests), including an independent exhaustive oracle over small graphs, parallel edges, protected choices, budgets, immutability, and extra-field index tampering. JavaScript syntax was checked. The deployed repair page was verified in a desktop browser: the sample finds a two-edge repair preserving Published, a budget of one reports budget-exhausted, changing settings disables stale export, and expanded necessity evidence shows unsafe paths when each removed edge is restored. Mobile/4K layouts and downloaded export contents remain unverified.
 
+## Independently verify a repair export
+
+Download evidence from the repair workbench, then run:
+
+```sh
+node verify-repair-cli.mjs counterfactual-repair-evidence.json
+```
+
+The CLI prints a compact JSON verdict. Exit **0** means verified, **1** means rejected or unsupported, and **2** means a usage/read/encoding/JSON error. It accepts a regular UTF-8 JSON file of at most 8 MiB, reads with a byte limit, and never prints input values in read/parse error messages. No dependencies, network requests, or credentials are needed.
+
+`verify-repair.mjs` does not import the planner or its checker. It computes reachability through repeated edge scans and enumerates removal masks independently. For successful `repaired` and `already-safe` exports it verifies:
+
+- Allowed removals, unsafe-state exclusion and required-goal reachability.
+- Minimum cardinality and completeness of the reported alternatives.
+- Lost reachable states and terminal-aware deadlocks.
+- Replayable paths to required goals and unsafe paths when removed edges are restored.
+
+The verifier deliberately returns `unsupported-status` for negative reports such as `impossible` and `budget-exhausted`; these are not certified. It does not validate the report's descriptive reason, original baseline summary or planner candidate-count metadata. Its own candidate count is recomputed. Graphs are limited to 128 states/edges and 12 editable edges; label arrays are bounded as well.
+
+**Trust boundary:** verification establishes internal consistency relative to the supplied model and options. It is not a signature or provenance check: an attacker who changes both the model and its evidence can produce a different valid report. Preserve a trusted copy of the intended model and compare it before relying on a verdict. No production-system or eventual-progress guarantee follows.
+
+Ten verifier/CLI tests passed locally, including altered evidence, omitted alternatives, nonminimal but individually necessary removals, 16 small subgraphs, invalid UTF-8 and oversized input. Together with the existing checker/planner suite, **29 tests passed locally**. Remote CI execution for this change has not been confirmed. The new verifier is a command-line/module feature; it does not change the deployed browser interface.
+
 ## Problem
 
 A workflow can look reasonable while retaining a shortcut around its review step. This tool asks a precise question: can any sequence of the transitions you declared reach a state you marked unsafe?
@@ -45,14 +68,14 @@ A workflow can look reasonable while retaining a shortcut around its review step
 - Dead-end detection with separate intentional terminal states.
 - Editable examples for approval bypass, repaired approval, and stranded queues.
 - Replay controls and JSON export containing the model, search limits, and results.
-- Nineteen behavior tests and a GitHub Actions workflow.
+- Twenty-nine behavior tests and a GitHub Actions workflow.
 
 ## Run
 
 Node.js 22 or newer is recommended. No package dependencies or API keys are needed.
 
 ```sh
-node --test test.mjs repair.test.mjs
+node --test test.mjs repair.test.mjs verify-repair.test.mjs
 python3 -m http.server 8000
 ```
 
@@ -77,7 +100,7 @@ States and action labels are nonempty strings up to 120 characters. Transitions 
 
 `engine.mjs` validates and explores the graph without a DOM. `examples.mjs` contains synthetic fixtures. `app.mjs` handles editing, analysis, replay, and export. The engine leaves inputs unchanged and never evaluates code from a model.
 
-Tests cover shortest paths, unsafe initial states, cycles, search bounds, exact depth boundaries, terminal states, invalid schemas, unreachable unsafe states, and replay validity. Run them with `node --test test.mjs repair.test.mjs`.
+Tests cover shortest paths, unsafe initial states, cycles, search bounds, exact depth boundaries, terminal states, invalid schemas, unreachable unsafe states, and replay validity. Run them with `node --test test.mjs repair.test.mjs verify-repair.test.mjs`.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md), [SECURITY.md](SECURITY.md), and [CONTRIBUTING.md](CONTRIBUTING.md).
 
